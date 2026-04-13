@@ -783,7 +783,14 @@ function loadSession() {
     } catch(e){}
   }
   const pat = sessionStorage.getItem('sroi_pat');
-  if (pat) document.getElementById('pat').value = pat;
+  if (pat) {
+    document.getElementById('pat').value = pat;
+    // PAT sudah tersimpan — anggap connected agar Submit aktif
+    // User bisa Test Connection ulang dari Pengaturan Lanjutan jika perlu
+    connected = true;
+    updateConnBadge(true);
+    updateSubmitBtn();
+  }
 }
 
 function clearSession() {
