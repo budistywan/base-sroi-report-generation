@@ -313,6 +313,88 @@ header {
 #file-input { display: none; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── MOBILE NAV ─────────────────────────────── */
+.mob-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  height: 52px; z-index: 100;
+  box-shadow: 0 -2px 8px rgba(16,24,40,.06);
+}
+.mob-nav-tabs {
+  display: flex; height: 100%;
+}
+.mob-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer;
+  font-size: 10px; font-weight: 500; color: var(--text3);
+  border: none; background: none; font-family: var(--sans);
+  transition: color .15s;
+}
+.mob-tab.active { color: var(--blue); }
+.mob-tab .tab-icon { font-size: 16px; line-height: 1; }
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 768px) {
+  body { overflow: auto; height: auto; min-height: 100vh; }
+
+  header {
+    padding: 0 14px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .h-sub { display: none; }
+
+  .main {
+    display: block;
+    padding-bottom: 60px; /* space for mob-nav */
+  }
+
+  .panel {
+    display: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    min-height: calc(100vh - 110px);
+  }
+  .panel.mob-active { display: flex; }
+
+  /* Left panel adjustments */
+  .panel:first-child .panel-body { padding: 12px 14px; }
+
+  /* Center panel */
+  .center-panel { overflow: visible; }
+  .editor-area  { overflow: visible; min-height: auto; }
+  #json-editor  {
+    min-height: 280px; max-height: 50vh;
+    overflow-y: auto;
+  }
+  .bottom-cards {
+    grid-template-columns: 1fr;
+    max-height: none;
+  }
+  .bottom-card:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+
+  /* Editor toolbar */
+  .editor-toolbar { flex-wrap: wrap; gap: 5px; padding: 8px 12px; }
+  .editor-toolbar .btn.primary { width: 100%; margin-top: 4px; }
+  .t-spacer { display: none; }
+
+  /* Right panel */
+  .stage-card { padding: 12px; }
+  .stage-lbl  { font-size: 13px; }
+
+  /* Mob nav visible */
+  .mob-nav { display: block; }
+
+  /* Panel header */
+  .panel-hd { padding: 10px 14px 8px; }
+}
+
+@media (max-width: 400px) {
+  #json-editor { font-size: 11px; min-height: 220px; }
+  .prog-name   { font-size: 14px; }
+}
 </style>
 </head>
 <body>
@@ -520,6 +602,24 @@ header {
 </div>
 
 </div><!-- /main -->
+
+<!-- MOBILE NAV -->
+<nav class="mob-nav">
+  <div class="mob-nav-tabs">
+    <button class="mob-tab active" onclick="showPanel(0)" id="tab-0">
+      <span class="tab-icon">☰</span>
+      <span>Workspace</span>
+    </button>
+    <button class="mob-tab" onclick="showPanel(1)" id="tab-1">
+      <span class="tab-icon">{ }</span>
+      <span>JSON</span>
+    </button>
+    <button class="mob-tab" onclick="showPanel(2)" id="tab-2">
+      <span class="tab-icon">◉</span>
+      <span>Status</span>
+    </button>
+  </div>
+</nav>
 
 <script>
 // ══════════════════════════════════════════════════
@@ -810,7 +910,20 @@ function loadFile(e) {
   const r = new FileReader();
   r.onload = ev => {
     document.getElementById('json-editor').value = ev.target.result;
-    formatJSON(); validateAndPreview();
+    formatJSON();
+    // Auto-sync dropdown dari program_code di JSON
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      const code = parsed?.program_identity?.program_code?.toUpperCase();
+      if (code) {
+        const sel = document.getElementById('program');
+        if ([...sel.options].some(o => o.value === code)) {
+          sel.value = code;
+          onProgramChange();
+        }
+      }
+    } catch(e) {}
+    validateAndPreview();
   };
   r.readAsText(file);
   e.target.value = '';
@@ -1218,8 +1331,42 @@ function toggleMeta() {
   document.getElementById('meta-arrow').className = 'adv-arrow' + (metaOpen ? ' open' : '');
 }
 
+// ── MOBILE PANEL SWITCHING ──────────────────────
+let activePanelIdx = 0;
+
+function showPanel(idx) {
+  const panels = document.querySelectorAll('.main .panel');
+  const tabs   = document.querySelectorAll('.mob-tab');
+  panels.forEach((p, i) => {
+    p.classList.toggle('mob-active', i === idx);
+  });
+  tabs.forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  activePanelIdx = idx;
+}
+
+function initMobile() {
+  if (window.innerWidth <= 768) {
+    showPanel(0);
+  } else {
+    // Desktop: semua panel visible
+    document.querySelectorAll('.main .panel').forEach(p => p.classList.remove('mob-active'));
+  }
+}
+
+window.addEventListener('resize', initMobile);
+
+// Auto-switch ke panel Status saat submit
+const _origSubmitRun = submitRun;
+async function submitRun() {
+  if (window.innerWidth <= 768) showPanel(2);
+  return _origSubmitRun.apply(this, arguments);
+}
+
 // Init
 renderTimeline(); renderMeta();
+initMobile();
 </script>
 </body>
 </html>
