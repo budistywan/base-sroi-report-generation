@@ -1052,6 +1052,8 @@ function renderPreview(p) {
 // ══════════════════════════════════════════════════
 async function submitRun() {
   if (!connected || !jsonValid) return;
+  // Mobile: pindah ke panel Status
+  if (window.innerWidth <= 768) showPanel(2);
   run = { requestId:genReqId(), commitSha:null, commitUrl:null, runId:null, runUrl:null, runNumber:null, artifactId:null, artifactName:null, submittedAt:new Date().toISOString(), elapsed:0, elapsedTimer:null };
   STEPS.forEach(s => stepSt[s.id] = 'pending');
   stepSt['json'] = 'done';
@@ -1364,16 +1366,10 @@ function initMobile() {
 
 window.addEventListener('resize', initMobile);
 
-// Auto-switch ke panel Status saat submit
-const _origSubmitRun = submitRun;
-async function submitRun() {
-  if (window.innerWidth <= 768) showPanel(2);
-  return _origSubmitRun.apply(this, arguments);
-}
-
 // Init
 renderTimeline(); renderMeta();
 initMobile();
+updateSubmitBtn();
 </script>
 </body>
 </html>
