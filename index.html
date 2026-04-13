@@ -925,20 +925,32 @@ async function submitRun() {
   const b64   = btoa(unescape(encodeURIComponent(document.getElementById('json-editor').value)));
   const msg   = `ui-v1 submit | program=${prog} | requestId=${run.requestId}`;
 
+  console.log('=== SUBMIT START ===');
+  console.log('owner:', owner, 'repo:', repo, 'branch:', branch);
+  console.log('prog:', prog, 'path:', path);
+  console.log('PAT exists:', !!getPAT(), 'PAT length:', getPAT().length);
+
   try {
     let sha = null;
+    console.log('Step 1: Get existing SHA...');
     const ex = await githubFetch(`/repos/${owner}/${repo}/contents/${path}?ref=${branch}`);
-    if (ex.ok) { const d = await ex.json(); sha = d.sha; }
+    console.log('SHA fetch status:', ex.status);
+    if (ex.ok) { const d = await ex.json(); sha = d.sha; console.log('existing sha:', sha); }
+    else { console.log('File not found (expected for new file)'); }
 
     const body = { message:msg, content:b64, branch };
     if (sha) body.sha = sha;
 
+    console.log('Step 2: Commit file...');
+    console.log('body keys:', Object.keys(body), 'sha in body:', !!body.sha);
     const r = await githubFetch(`/repos/${owner}/${repo}/contents/${path}`, {
       method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
+    console.log('Commit status:', r.status);
     if (!r.ok) { const err = await r.json(); throw new Error(`Commit gagal (${r.status}): ${err.message}`); }
 
     const cd = await r.json();
+    console.log('Commit response keys:', Object.keys(cd));
     // Struktur response PUT /contents: { commit: { sha, html_url }, content: { sha } }
     // head_sha di workflow runs = cd.commit.sha (bukan cd.content.sha)
     console.log('Full commit response:', JSON.stringify(cd, null, 2));
