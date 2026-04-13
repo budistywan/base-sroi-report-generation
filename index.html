@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SROI Base Report Generator | by Manara Advisory</title>
+<title>SROI Report Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -592,13 +592,18 @@ window.onload = () => {
 function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
 function sel(id, txt) { const e = document.getElementById(id); if (e) e.textContent = txt; }
 
+function getPAT() {
+  // Fallback ke sessionStorage — input bisa kosong jika accordion belum dibuka
+  return v('pat') || sessionStorage.getItem('sroi_pat') || '';
+}
+
 function githubFetch(path, opts={}) {
-  const pat = v('pat');
-  if (!pat) return Promise.reject(new Error('Token belum diisi'));
+  const pat = getPAT();
+  if (!pat) return Promise.reject(new Error('Token belum diisi — buka Pengaturan Lanjutan dan isi PAT'));
   return fetch('https://api.github.com' + path, {
     ...opts,
     headers: {
-      'Authorization': `Bearer ${pat}`,
+      'Authorization': 'Bearer ' + pat,
       'Accept': 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       ...(opts.headers||{})
