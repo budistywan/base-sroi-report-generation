@@ -321,7 +321,7 @@ header {
   <div class="h-left">
     <div class="h-logo">S</div>
     <span class="h-title">SROI Report Generator</span>
-    <span class="h-sub">— by Manara Advisory</span>
+    <span class="h-sub">by Manara Advisory</span>
   </div>
   <div class="h-right">
     <span class="badge" id="hdr-conn"><span class="bdot" id="hdr-dot"></span><span id="hdr-lbl">Tidak Terhubung</span></span>
@@ -922,7 +922,15 @@ async function submitRun() {
   const owner = v('owner'), repo = v('repo'), branch = v('branch');
   const prog  = v('program').toLowerCase();
   const path  = `data/canonical/canonical_${prog}_v1.json`;
-  const b64   = btoa(unescape(encodeURIComponent(document.getElementById('json-editor').value)));
+  // Inject timestamp ke canonical agar GitHub selalu mendeteksi perubahan
+  let jsonContent = document.getElementById('json-editor').value;
+  try {
+    const parsed = JSON.parse(jsonContent);
+    parsed.last_updated = new Date().toISOString().split('T')[0];
+    parsed._submit_ts   = new Date().toISOString();
+    jsonContent = JSON.stringify(parsed, null, 2);
+  } catch(e) { /* biarkan apa adanya jika parse gagal */ }
+  const b64   = btoa(unescape(encodeURIComponent(jsonContent)));
   const msg   = `ui-v1 submit | program=${prog} | requestId=${run.requestId}`;
 
   console.log('=== SUBMIT START ===');
