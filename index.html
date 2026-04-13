@@ -997,6 +997,8 @@ async function pollForRun() {
       const runs = data.workflow_runs || [];
 
       // Strict match by head_sha
+      console.log('Polling attempt', pollCount, '| looking for commitSha:', run.commitSha);
+      console.log('Available runs head_sha:', runs.map(r => r.head_sha + ' (status:' + r.status + ')'));
       const match = run.commitSha ? runs.find(r => r.head_sha === run.commitSha) : null;
 
       if (match) {
