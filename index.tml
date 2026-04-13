@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SROI Base Report Generator | by Manara Advisory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #f5f7fa;
+  --surface:     #ffffff;
+  --surface2:    #f0f2f5;
+  --surface3:    #e8eaf0;
+  --border:      #e4e7ec;
+  --border2:     #d0d5dd;
+  --text:        #101828;
+  --text2:       #475467;
+  --text3:       #98a2b3;
+  --blue:        #1570ef;
+  --blue-light:  #eff4ff;
+  --blue-mid:    #d1e0ff;
+  --green:       #039855;
+  --green-light: #ecfdf3;
+  --green-mid:   #a9efc5;
+  --yellow-text: #92400e;
+  --yellow-bg:   #fffbeb;
+  --yellow-border:#fcd34d;
+  --red:         #d92d20;
+  --red-light:   #fef3f2;
+  --red-mid:     #fda29b;
+  --sans:        'Plus Jakarta Sans', sans-serif;
+  --mono:        'JetBrains Mono', monospace;
+  --radius:      8px;
+  --radius-sm:   5px;
+  --shadow:      0 1px 3px rgba(16,24,40,.07), 0 1px 2px rgba(16,24,40,.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  font-size: 13px; line-height: 1.5;
+}
+
+/* ── HEADER ──────────────────────────────── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 50px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+.h-left  { display: flex; align-items: center; gap: 10px; }
+.h-logo  {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--blue); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.h-title { font-size: 14px; font-weight: 600; }
+.h-sub   { font-size: 11px; color: var(--text3); margin-left: 2px; }
+.h-right { display: flex; gap: 8px; align-items: center; }
+
+/* ── BADGE ──────────────────────────────── */
+.badge {
+  font-size: 11px; font-weight: 500;
+  padding: 2px 9px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text2);
+}
+.badge.green  { background: var(--green-light); border-color: var(--green-mid);  color: var(--green); }
+.badge.blue   { background: var(--blue-light);  border-color: var(--blue-mid);   color: var(--blue); }
+.badge.red    { background: var(--red-light);   border-color: var(--red-mid);    color: var(--red); }
+.bdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink:0; }
+.bdot.pulse { animation: pulse 1.8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+
+/* ── MAIN LAYOUT ────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 290px 1fr 310px;
+  flex: 1; overflow: hidden;
+}
+.panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel:last-child { border-right: none; }
+.panel-hd {
+  padding: 13px 16px 9px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; }
+.panel-sub   { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.panel-body  { flex: 1; overflow-y: auto; padding: 14px 16px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* ── SECTION LABEL ──────────────────────── */
+.sec-label {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: 8px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── PROGRAM CARD ───────────────────────── */
+.prog-card {
+  background: var(--blue-light);
+  border: 1px solid var(--blue-mid);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.prog-lbl  { font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing:.08em; margin-bottom: 4px; }
+.prog-name { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.prog-code { font-size: 11px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+
+/* Program selector inside card */
+.prog-select-wrap { margin-top: 10px; }
+.prog-select-wrap label { font-size: 11px; font-weight: 500; color: var(--text2); display: block; margin-bottom: 4px; }
+.prog-select-wrap select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--blue-mid);
+  border-radius: var(--radius-sm);
+  color: var(--text); padding: 6px 9px;
+  font-size: 12px; font-family: var(--sans);
+  outline: none; cursor: pointer;
+  transition: border-color .15s;
+}
+.prog-select-wrap select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,112,239,.1); }
+
+/* ── GUIDANCE NOTE ──────────────────────── */
+.guidance {
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.guidance .g-title { font-size: 10px; font-weight: 700; color: var(--yellow-text); text-transform: uppercase; letter-spacing:.08em; margin-bottom: 6px; }
+.guidance .g-item  { font-size: 11px; color: var(--yellow-text); display: flex; gap: 6px; align-items: flex-start; margin-bottom: 3px; }
+.guidance .g-item::before { content: '·'; font-weight: 700; flex-shrink: 0; }
+
+/* ── ADVANCED SETTINGS ──────────────────── */
+.adv-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 600;
+  color: var(--text2); padding: 9px 0;
+  border-top: 1px solid var(--border);
+  transition: color .12s;
+}
+.adv-btn:hover { color: var(--blue); }
+.adv-arrow { font-size: 10px; transition: transform .2s; }
+.adv-arrow.open { transform: rotate(180deg); }
+.adv-body { display: none; padding-top: 14px; }
+.adv-body.open { display: block; }
+
+/* Form elements inside adv */
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: 3px; }
+.field input, .field select {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text); padding: 6px 9px;
+  font-size: 12px; font-family: var(--mono); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,112,239,.1); }
+.field select option { font-family: var(--sans); }
+
+.adv-sec { margin-bottom: 14px; }
+.adv-sec-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing:.09em; margin-bottom: 8px; }
+
+/* Detail teknis di dalam adv */
+.tech-detail { background: var(--surface2); border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 6px; }
+.td-row { display: flex; flex-direction: column; margin-bottom: 6px; }
+.td-row:last-child { margin-bottom: 0; }
+.td-key { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing:.06em; }
+.td-val { font-size: 11px; color: var(--text2); font-family: var(--mono); margin-top: 1px; word-break: break-all; }
+
+/* Token wrap */
+.token-wrap { position: relative; }
+.token-wrap input { padding-right: 44px; }
+.token-show {
+  position: absolute; right: 7px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px; color: var(--text3);
+  cursor: pointer; background: none; border: none; font-family: var(--mono); padding: 2px;
+}
+.token-show:hover { color: var(--blue); }
+
+/* Status msg */
+.status-msg { font-size: 11px; margin-top: 6px; }
+.status-msg.ok   { color: var(--green); }
+.status-msg.err  { color: var(--red); }
+.status-msg.info { color: var(--blue); }
+.status-msg.warn { color: var(--yellow-text); }
+
+.notice-err {
+  background: var(--red-light); border: 1px solid var(--red-mid);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+  font-size: 11px; color: var(--red); margin-top: 6px; line-height: 1.5;
+}
+
+/* ── BUTTONS ────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  border: 1px solid var(--border2); background: var(--surface); color: var(--text2);
+  border-radius: var(--radius-sm); padding: 6px 12px;
+  font-size: 12px; font-weight: 500; font-family: var(--sans);
+  cursor: pointer; transition: all .12s; white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+.btn:hover   { background: var(--surface2); color: var(--text); }
+.btn:active  { transform: scale(.98); }
+.btn:disabled{ opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: #1260d4; }
+.btn.success { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+.btn.success:hover { background: #027a48; }
+.btn.danger  { color: var(--red); border-color: var(--red-mid); }
+.btn.danger:hover  { background: var(--red-light); }
+.btn.ghost   { border-color: transparent; background: transparent; box-shadow: none; color: var(--text2); }
+.btn.ghost:hover { background: var(--surface2); color: var(--text); }
+.btn.sm  { padding: 4px 9px; font-size: 11px; }
+.btn.full{ width: 100%; }
+
+/* ── CENTER PANEL ───────────────────────── */
+.center-panel { display: flex; flex-direction: column; overflow: hidden; }
+.editor-toolbar {
+  padding: 9px 16px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
+}
+.t-spacer { flex: 1; }
+
+#json-editor {
+  flex: 1; width: 100%;
+  background: #fafbfc; border: none;
+  color: var(--text); font-family: var(--mono);
+  font-size: 12px; line-height: 1.7;
+  padding: 14px 16px; resize: none; outline: none;
+  border-bottom: 1px solid var(--border);
+}
+#json-editor::placeholder { color: var(--text3); font-family: var(--sans); font-size: 13px; font-style: italic; }
+.editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+.bottom-cards {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border); flex-shrink: 0; max-height: 160px;
+}
+.bc { padding: 10px 14px; overflow-y: auto; }
+.bc:first-child { border-right: 1px solid var(--border); }
+.bc-title { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing:.08em; margin-bottom: 7px; }
+
+.vi { display: flex; align-items: flex-start; gap: 5px; font-size: 11px; line-height: 1.5; margin-bottom: 3px; }
+.vi .ic { flex-shrink:0; font-size:11px; }
+.vi.ok   { color: var(--green); }
+.vi.warn { color: var(--yellow-text); }
+.vi.err  { color: var(--red); }
+.vi.dim  { color: var(--text3); }
+
+.sr { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+.sr .sk { color: var(--text2); font-weight: 500; }
+.sr .sv { color: var(--text); font-family: var(--mono); }
+
+/* ── RIGHT PANEL ────────────────────────── */
+.stage-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+  margin-bottom: 14px; text-align: center;
+  transition: background .2s, border-color .2s;
+}
+.stage-card.running { background: var(--blue-light);  border-color: var(--blue-mid); }
+.stage-card.success { background: var(--green-light); border-color: var(--green-mid); }
+.stage-card.failed  { background: var(--red-light);   border-color: var(--red-mid); }
+
+.stage-lbl { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.stage-sub { font-size: 11px; color: var(--text2); }
+
+.tl { margin-bottom: 14px; }
+.tl-item { display: flex; align-items: center; gap: 9px; padding: 4px 0; font-size: 12px; color: var(--text3); }
+.tl-item.done   { color: var(--text2); }
+.tl-item.done .tl-dot   { background: var(--green); }
+.tl-item.active { color: var(--text); font-weight: 500; }
+.tl-item.active .tl-dot { background: var(--blue); animation: pulse 1.5s infinite; }
+.tl-item.failed { color: var(--red); }
+.tl-item.failed .tl-dot { background: var(--red); }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: background .2s; }
+.tl-icon{ width: 14px; text-align: center; font-size: 10px; flex-shrink: 0; }
+
+.meta-t { margin-bottom: 14px; }
+.meta-r { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.meta-r:last-child { border-bottom: none; }
+.meta-k { color: var(--text3); font-weight: 500; }
+.meta-v { color: var(--text2); font-family: var(--mono); text-align: right; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta-v.hi { color: var(--blue); }
+
+.act-grp { display: flex; flex-direction: column; gap: 7px; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+#file-input { display: none; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="h-left">
+    <div class="h-logo">S</div>
+    <span class="h-title">SROI Report Generator</span>
+    <span class="h-sub">— internal tool</span>
+  </div>
+  <div class="h-right">
+    <span class="badge" id="hdr-conn"><span class="bdot" id="hdr-dot"></span><span id="hdr-lbl">Tidak Terhubung</span></span>
+    <span class="badge blue" id="hdr-session" style="display:none"><span class="bdot"></span>Sesi Aktif</span>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════
+     LEFT PANEL — WORKSPACE
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="panel-hd">
+    <div class="panel-title">Workspace</div>
+    <div class="panel-sub">Pilih program dan siapkan file JSON sebelum submit</div>
+  </div>
+  <div class="panel-body">
+
+    <!-- Blok 1: Program Aktif -->
+    <div class="prog-card">
+      <div class="prog-lbl">Program Aktif</div>
+      <div class="prog-name" id="prog-name">Enduro Home Service</div>
+      <div class="prog-code" id="prog-code">EHS · 2023–2025</div>
+      <div class="prog-select-wrap">
+        <label>Pilih Program</label>
+        <select id="program" onchange="onProgramChange()">
+          <option value="EHS">EHS — Enduro Home Service</option>
+          <option value="ESL">ESL — Enduro Sahabat Lapas</option>
+          <option value="ESD">ESD — Enduro Sahabat Difabel</option>
+          <option value="ESP">ESP — Enduro Sahabat Petani</option>
+          <option value="ESS">ESS — Enduro Sahabat Sekolah</option>
+          <option value="ETB">ETB — Enduro Teman Bengkel</option>
+          <option value="PSN">PSN — Pertamina Sahabat Nelayan</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Blok 2: Status Koneksi -->
+    <div style="padding: 10px 0; border-top: 1px solid var(--border);">
+      <span class="badge" id="lft-conn"><span class="bdot" id="lft-dot"></span><span id="lft-lbl">Tidak Terhubung</span></span>
+    </div>
+
+    <!-- Blok 3: Sebelum Submit -->
+    <div class="guidance">
+      <div class="g-title">Sebelum Submit</div>
+      <div class="g-item">Pastikan file JSON sudah final</div>
+      <div class="g-item">Submit akan memperbarui data aktif untuk program yang dipilih</div>
+    </div>
+
+    <!-- Blok 4: Pengaturan Lanjutan -->
+    <button class="adv-btn" onclick="toggleAdv()" id="adv-btn">
+      <span>⚙ Pengaturan Lanjutan</span>
+      <span class="adv-arrow" id="adv-arrow">▾</span>
+    </button>
+
+    <div class="adv-body" id="adv-body">
+
+      <!-- Akses GitHub -->
+      <div class="adv-sec" style="margin-top:14px">
+        <div class="adv-sec-label">Akses GitHub</div>
+        <div class="field">
+          <label>Personal Access Token</label>
+          <div class="token-wrap">
+            <input type="password" id="pat" placeholder="ghp_…" autocomplete="off">
+            <button class="token-show" onclick="togglePAT()">show</button>
+          </div>
+        </div>
+        <button class="btn full" id="btn-connect" onclick="testConnection()">Test Connection</button>
+        <div class="status-msg" id="conn-msg"></div>
+        <div id="conn-err"></div>
+      </div>
+
+      <!-- Target repository -->
+      <div class="adv-sec">
+        <div class="adv-sec-label">Target Repository</div>
+        <div class="field"><label>Owner</label><input type="text" id="owner" value="budistywan"></div>
+        <div class="field"><label>Repository</label><input type="text" id="repo" value="sroi-base-report"></div>
+        <div class="field"><label>Branch</label><input type="text" id="branch" value="main" oninput="syncTargetCard()"></div>
+        <div class="field"><label>Workflow File</label><input type="text" id="workflow" value="generate-report.yml"></div>
+      </div>
+
+      <!-- Pengaturan proses -->
+      <div class="adv-sec">
+        <div class="adv-sec-label">Pengaturan Proses</div>
+        <div class="field">
+          <label>Mode Pipeline</label>
+          <select id="mode" onchange="syncTargetCard()">
+            <option value="full">Full — proses lengkap</option>
+            <option value="core-only">Core Only — tanpa refinement</option>
+            <option value="refine-only">Refine Only — refinement saja</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Detail teknis -->
+      <div class="adv-sec">
+        <div class="adv-sec-label">Detail Teknis</div>
+        <div class="tech-detail">
+          <div class="td-row"><span class="td-key">Repo aktif</span><span class="td-val" id="td-repo">budistywan/sroi-base-report</span></div>
+          <div class="td-row"><span class="td-key">Workflow</span><span class="td-val" id="td-wf">generate-report.yml</span></div>
+          <div class="td-row"><span class="td-key">Path file aktif</span><span class="td-val" id="td-path">data/canonical/canonical_ehs_v1.json</span></div>
+        </div>
+      </div>
+
+      <!-- Session -->
+      <div class="adv-sec">
+        <div class="adv-sec-label">Pengaturan Sesi</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn full" onclick="saveSession()">Simpan Pengaturan</button>
+          <button class="btn danger" onclick="clearSession()">Hapus Sesi</button>
+        </div>
+      </div>
+
+    </div><!-- /adv-body -->
+
+  </div><!-- /panel-body -->
+</div><!-- /left panel -->
+
+
+<!-- ══════════════════════════════════════════════
+     CENTER PANEL — JSON EDITOR
+══════════════════════════════════════════════ -->
+<div class="panel center-panel">
+  <div class="editor-toolbar">
+    <button class="btn sm" onclick="document.getElementById('file-input').click()">↑ Buka File</button>
+    <input type="file" id="file-input" accept=".json" onchange="loadFile(event)">
+    <button class="btn sm" onclick="formatJSON()">{ } Format</button>
+    <button class="btn sm" onclick="validateAndPreview()">✓ Validasi</button>
+    <div class="t-spacer"></div>
+    <button class="btn primary" id="btn-submit" onclick="submitRun()" disabled>▶ Submit &amp; Jalankan Workflow</button>
+  </div>
+
+  <div class="editor-area">
+    <textarea id="json-editor"
+      placeholder="Paste canonical JSON di sini, atau klik Buka File untuk memilih file .json"
+      oninput="onEditorInput()"></textarea>
+  </div>
+
+  <div class="bottom-cards">
+    <div class="bc">
+      <div class="bc-title">Validasi</div>
+      <div id="val-result"><div class="vi dim"><span class="ic">·</span><span>Belum divalidasi</span></div></div>
+    </div>
+    <div class="bc">
+      <div class="bc-title">Ringkasan JSON</div>
+      <div id="sum-preview"><div style="color:var(--text3);font-size:11px">—</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     RIGHT PANEL — STATUS RUN
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="panel-hd">
+    <div class="panel-title">Status Run</div>
+    <div class="panel-sub">Pantau proses submit dan hasil generate laporan</div>
+  </div>
+  <div class="panel-body">
+
+    <!-- 1. Kartu status utama — selalu terlihat -->
+    <div class="stage-card" id="stage-card">
+      <div class="stage-lbl" id="stage-lbl">Siap</div>
+      <div class="stage-sub" id="stage-sub">Lengkapi konfigurasi dan submit untuk memulai</div>
+    </div>
+
+    <!-- 2. Progres — selalu terlihat -->
+    <div class="sec-label" style="margin-bottom:10px">Progres</div>
+    <div class="tl" id="timeline"></div>
+
+    <div class="divider"></div>
+
+    <!-- 3. Tombol aksi — selalu terlihat -->
+    <div class="act-grp">
+      <button class="btn" onclick="refreshStatus()" id="btn-refresh" disabled>↻ Perbarui Status</button>
+      <button class="btn success" onclick="downloadArtifact()" id="btn-download" disabled>↓ Unduh Artifact (.zip)</button>
+      <button class="btn" onclick="openGitHub()" id="btn-github" disabled>⎘ Lihat di GitHub</button>
+      <button class="btn ghost" onclick="resetRunState()">⟳ Reset Run</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 4. Metadata teknis — collapsible -->
+    <button class="adv-btn" onclick="toggleMeta()" id="meta-toggle-btn">
+      <span>Detail Teknis Run</span>
+      <span class="adv-arrow" id="meta-arrow">▾</span>
+    </button>
+    <div class="adv-body" id="meta-body">
+      <div class="meta-t" style="margin-top:10px" id="meta-table"></div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════
+// PROGRAM MAP
+// ══════════════════════════════════════════════════
+const PROG = {
+  EHS:'Enduro Home Service', ESL:'Enduro Sahabat Lapas',
+  ESD:'Enduro Sahabat Difabel', ESP:'Enduro Sahabat Petani',
+  ESS:'Enduro Sahabat Sekolah', ETB:'Enduro Teman Bengkel',
+  PSN:'Pertamina Sahabat Nelayan'
+};
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+const S = {
+  IDLE:'idle', JSON_VALID:'json_valid',
+  SUBMITTING:'submitting', COMMIT_DONE:'commit_done',
+  DETECTING:'detecting', RUNNING:'running',
+  SUCCESS:'success', FAILED:'failed',
+  ARTIFACT:'artifact', DOWNLOADED:'downloaded', ERROR:'error'
+};
+
+let appState = S.IDLE;
+let connected = false;
+let jsonValid  = false;
+let pollingTimer = null;
+let pollCount = 0;
+const MAX_POLLS = 150;
+
+let run = {
+  requestId:null, commitSha:null, commitUrl:null,
+  runId:null, runUrl:null, runNumber:null,
+  artifactId:null, artifactName:null,
+  submittedAt:null, elapsed:0, elapsedTimer:null
+};
+
+const STEPS = [
+  { id:'json',     label:'JSON siap' },
+  { id:'commit',   label:'File dikirim' },
+  { id:'detect',   label:'Run terdeteksi' },
+  { id:'running',  label:'Workflow berjalan' },
+  { id:'done',     label:'Workflow selesai' },
+  { id:'artifact', label:'Artifact tersedia' },
+  { id:'dl',       label:'Diunduh' },
+];
+let stepSt = {};
+STEPS.forEach(s => stepSt[s.id] = 'pending');
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+window.onload = () => {
+  loadSession();
+  renderTimeline();
+  renderMeta();
+  syncTargetCard();
+  updateSubmitBtn();
+
+  ['owner','repo','workflow'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', syncTargetCard);
+  });
+
+  const draft = sessionStorage.getItem('sroi_draft_json');
+  if (draft) document.getElementById('json-editor').value = draft;
+};
+
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
+function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+function sel(id, txt) { const e = document.getElementById(id); if (e) e.textContent = txt; }
+
+function githubFetch(path, opts={}) {
+  const pat = v('pat');
+  if (!pat) return Promise.reject(new Error('Token belum diisi'));
+  return fetch('https://api.github.com' + path, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${pat}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers||{})
+    }
+  });
+}
+
+function shortSha(sha) { return sha ? sha.substring(0,7) : '—'; }
+function fmtElapsed(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function genReqId() {
+  const ts = new Date().toISOString().replace(/[-:.TZ]/g,'').substring(0,14);
+  return `req_${ts}_${Math.random().toString(36).substring(2,6)}`;
+}
+
+// ══════════════════════════════════════════════════
+// PANEL KIRI — SYNC
+// ══════════════════════════════════════════════════
+function onProgramChange() {
+  const code = v('program');
+  sel('prog-name', PROG[code] || code);
+  sel('prog-code', code + ' · 2023–2025');
+  syncTargetCard();
+  updateSubmitBtn();
+}
+
+function syncTargetCard() {
+  // Hanya update detail teknis di dalam Pengaturan Lanjutan
+  const owner  = v('owner') || 'budistywan';
+  const repo   = v('repo')  || 'sroi-base-report';
+  const wf     = v('workflow') || 'generate-report.yml';
+  const prog   = v('program').toLowerCase();
+  const path   = `data/canonical/canonical_${prog}_v1.json`;
+  sel('td-repo',  `${owner}/${repo}`);
+  sel('td-wf',    wf);
+  sel('td-path',  path);
+}
+
+// ══════════════════════════════════════════════════
+// ADVANCED TOGGLE
+// ══════════════════════════════════════════════════
+let advOpen = false;
+function toggleAdv() {
+  advOpen = !advOpen;
+  document.getElementById('adv-body').className  = 'adv-body' + (advOpen ? ' open' : '');
+  document.getElementById('adv-arrow').className = 'adv-arrow' + (advOpen ? ' open' : '');
+}
+
+// ══════════════════════════════════════════════════
+// SESSION
+// ══════════════════════════════════════════════════
+function saveSession() {
+  const cfg = {
+    owner:v('owner'), repo:v('repo'), branch:v('branch'),
+    workflow:v('workflow'), program:v('program'), mode:v('mode')
+  };
+  sessionStorage.setItem('sroi_cfg', JSON.stringify(cfg));
+  const pat = v('pat');
+  if (pat) sessionStorage.setItem('sroi_pat', pat);
+  document.getElementById('hdr-session').style.display = '';
+  showConnMsg('Pengaturan tersimpan', 'ok');
+}
+
+function loadSession() {
+  const cfg = sessionStorage.getItem('sroi_cfg');
+  if (cfg) {
+    try {
+      const c = JSON.parse(cfg);
+      if (c.owner)    document.getElementById('owner').value    = c.owner;
+      if (c.repo)     document.getElementById('repo').value     = c.repo;
+      if (c.branch)   document.getElementById('branch').value   = c.branch;
+      if (c.workflow) document.getElementById('workflow').value = c.workflow;
+      if (c.program)  document.getElementById('program').value  = c.program;
+      if (c.mode)     document.getElementById('mode').value     = c.mode;
+      document.getElementById('hdr-session').style.display = '';
+      onProgramChange();
+    } catch(e){}
+  }
+  const pat = sessionStorage.getItem('sroi_pat');
+  if (pat) document.getElementById('pat').value = pat;
+}
+
+function clearSession() {
+  ['sroi_cfg','sroi_pat','sroi_draft_json'].forEach(k => sessionStorage.removeItem(k));
+  document.getElementById('hdr-session').style.display = 'none';
+  document.getElementById('pat').value = '';
+  connected = false;
+  updateConnBadge(false);
+  showConnMsg('Sesi dihapus', 'warn');
+  updateSubmitBtn();
+}
+
+// ══════════════════════════════════════════════════
+// CONNECTION
+// ══════════════════════════════════════════════════
+async function testConnection() {
+  const btn = document.getElementById('btn-connect');
+  btn.disabled = true; btn.textContent = 'Menghubungkan…';
+  document.getElementById('conn-err').innerHTML = '';
+  showConnMsg('Memverifikasi…', 'info');
+
+  try {
+    // 1. PAT
+    const r1 = await githubFetch('/user');
+    if (!r1.ok) throw new Error(`Token tidak valid (${r1.status})`);
+    const user = await r1.json();
+
+    // 2. Repo
+    const owner = v('owner'), repo = v('repo');
+    const r2 = await githubFetch(`/repos/${owner}/${repo}`);
+    if (!r2.ok) throw new Error(`Repo tidak ditemukan: ${owner}/${repo}`);
+
+    // 3. Branch
+    const branch = v('branch');
+    const r3 = await githubFetch(`/repos/${owner}/${repo}/branches/${branch}`);
+    if (!r3.ok) throw new Error(`Branch '${branch}' tidak ditemukan`);
+
+    // 4. Workflow
+    const wf = v('workflow');
+    const r4 = await githubFetch(`/repos/${owner}/${repo}/actions/workflows`);
+    if (r4.ok) {
+      const wfData = await r4.json();
+      const found = (wfData.workflows||[]).find(w => w.path.includes(wf) || w.name === wf);
+      if (!found) throw new Error(`Workflow '${wf}' tidak ditemukan di repo`);
+    }
+
+    connected = true;
+    updateConnBadge(true);
+    showConnMsg(`Terhubung sebagai @${user.login}`, 'ok');
+    saveSession();
+    updateSubmitBtn();
+  } catch(e) {
+    connected = false;
+    updateConnBadge(false);
+    showConnMsg('Koneksi gagal', 'err');
+    document.getElementById('conn-err').innerHTML = `<div class="notice-err">${e.message}</div>`;
+    updateSubmitBtn();
+  }
+
+  btn.disabled = false; btn.textContent = 'Test Connection';
+}
+
+function updateConnBadge(ok) {
+  const cls = ok ? ' green' : '';
+  const dot = ok ? ' pulse' : '';
+  const lbl = ok ? 'Terhubung' : 'Tidak Terhubung';
+  ['hdr-conn','lft-conn'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.className = 'badge' + cls;
+  });
+  ['hdr-dot','lft-dot'].forEach(id => {
+    const d = document.getElementById(id);
+    if (d) d.className = 'bdot' + dot;
+  });
+  ['hdr-lbl','lft-lbl'].forEach(id => sel(id, lbl));
+}
+
+function showConnMsg(msg, type) {
+  const el = document.getElementById('conn-msg');
+  el.className = 'status-msg ' + (type||'');
+  el.textContent = msg;
+}
+
+function togglePAT() {
+  const inp = document.getElementById('pat');
+  const btn = inp.parentElement.querySelector('.token-show');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'show' : 'hide';
+}
+
+// ══════════════════════════════════════════════════
+// STATE MACHINE
+// ══════════════════════════════════════════════════
+function setState(newState) {
+  appState = newState;
+  updateSubmitBtn();
+
+  const card = document.getElementById('stage-card');
+  card.className = 'stage-card';
+  if ([S.SUBMITTING,S.COMMIT_DONE,S.DETECTING,S.RUNNING].includes(newState)) card.classList.add('running');
+  if ([S.SUCCESS,S.ARTIFACT,S.DOWNLOADED].includes(newState)) card.classList.add('success');
+  if ([S.FAILED,S.ERROR].includes(newState)) card.classList.add('failed');
+}
+
+function updateSubmitBtn() {
+  const busy = [S.SUBMITTING,S.COMMIT_DONE,S.DETECTING,S.RUNNING].includes(appState);
+  document.getElementById('btn-submit').disabled = !connected || !jsonValid || busy;
+}
+
+// ══════════════════════════════════════════════════
+// JSON EDITOR
+// ══════════════════════════════════════════════════
+let asTimer = null;
+function onEditorInput() {
+  jsonValid = false;
+  document.getElementById('btn-submit').disabled = true;
+  document.getElementById('val-result').innerHTML = '<div class="vi dim"><span class="ic">·</span><span>Belum divalidasi</span></div>';
+  clearTimeout(asTimer);
+  asTimer = setTimeout(() => sessionStorage.setItem('sroi_draft_json', document.getElementById('json-editor').value), 800);
+}
+
+function loadFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById('json-editor').value = ev.target.result;
+    formatJSON(); validateAndPreview();
+  };
+  r.readAsText(file);
+  e.target.value = '';
+}
+
+function formatJSON() {
+  const ed = document.getElementById('json-editor');
+  try { ed.value = JSON.stringify(JSON.parse(ed.value), null, 2); } catch(e){}
+}
+
+// Schema contract v1
+const REQ_FIELDS  = ['schema_version','case_id','program_identity','source_registry','investment','outcomes','monetization','ddat_params','ori_rates','sroi_metrics','coverage_status'];
+const REQ_ARRAYS  = ['source_registry','investment','outcomes','monetization'];
+const MON_REQ     = ['aspect_code','year','gross_idr','display_status'];
+
+function validateAndPreview() {
+  const ed = document.getElementById('json-editor');
+  const items = []; let parsed;
+
+  try {
+    parsed = JSON.parse(ed.value);
+    items.push({ t:'ok', m:'Sintaks JSON valid' });
+  } catch(e) {
+    items.push({ t:'err', m:`Kesalahan sintaks: ${e.message.split('\n')[0]}` });
+    renderVal(items); jsonValid = false; updateSubmitBtn(); return;
+  }
+
+  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+    items.push({ t:'err', m:'Root JSON harus berupa object {}' });
+    renderVal(items); jsonValid = false; updateSubmitBtn(); return;
+  }
+
+  const missing = REQ_FIELDS.filter(f => !(f in parsed));
+  if (missing.length === 0) items.push({ t:'ok', m:'Semua field wajib hadir' });
+  else missing.forEach(f => items.push({ t:'err', m:`Field wajib hilang: ${f}` }));
+
+  REQ_ARRAYS.forEach(f => {
+    if (!(f in parsed)) return;
+    if (!Array.isArray(parsed[f])) items.push({ t:'err', m:`${f} harus berupa array` });
+    else if (parsed[f].length === 0) items.push({ t:'warn', m:`${f}: array kosong` });
+  });
+
+  if (Array.isArray(parsed.monetization) && parsed.monetization.length > 0) {
+    const missMon = MON_REQ.filter(k => !(k in parsed.monetization[0]));
+    if (missMon.length > 0) items.push({ t:'warn', m:`monetization: kurang field ${missMon.join(', ')}` });
+    else items.push({ t:'ok', m:'Format monetization valid' });
+  }
+
+  if (parsed.strategy_design?.institutional && typeof parsed.strategy_design.institutional === 'string') {
+    items.push({ t:'warn', m:'strategy_design.institutional harus object {nodes, note}, bukan string' });
+  }
+
+  if (parsed.ddat_params) {
+    const noJust = Object.keys(parsed.ddat_params).filter(k => !parsed.ddat_params[k].justification);
+    if (noJust.length > 0) items.push({ t:'warn', m:`ddat_params: justification belum ada di ${noJust.join(', ')}` });
+  }
+
+  if (parsed.program_identity?.program_code) {
+    const code = parsed.program_identity.program_code;
+    const sel  = v('program');
+    if (code !== sel) items.push({ t:'warn', m:`program_code '${code}' ≠ pilihan '${sel}'` });
+    else items.push({ t:'ok', m:`program_code cocok: ${code}` });
+  }
+
+  jsonValid = missing.length === 0;
+  renderVal(items);
+  renderPreview(parsed);
+  updateSubmitBtn();
+  if (jsonValid) setState(S.JSON_VALID);
+}
+
+function renderVal(items) {
+  const ico = { ok:'✓', warn:'!', err:'✗', dim:'·' };
+  document.getElementById('val-result').innerHTML = items.map(i =>
+    `<div class="vi ${i.t}"><span class="ic">${ico[i.t]}</span><span>${i.m}</span></div>`
+  ).join('');
+}
+
+function renderPreview(p) {
+  const pi  = p?.program_identity || {};
+  const inv = Array.isArray(p?.investment) ? p.investment : [];
+  const tot = inv.reduce((a,b) => a + (b.amount_idr||0), 0);
+  const rows = [
+    { k:'Program',    v: pi.program_name || pi.program_code || '—' },
+    { k:'Perusahaan', v: pi.company || '—' },
+    { k:'Periode',    v: pi.period_label || (pi.period_start ? `${pi.period_start}–${pi.period_end}` : '—') },
+    { k:'Stakeholder',v: (p?.stakeholders?.length||0) + ' pihak' },
+    { k:'Investasi',  v: tot > 0 ? 'Rp '+tot.toLocaleString('id-ID') : inv.length+' entri' },
+    { k:'Outcome',    v: (p?.outcomes?.length||0) + ' outcome' },
+    { k:'Monetisasi', v: (p?.monetization?.length||0) + ' entri' },
+    { k:'Aspek DDAT', v: Object.keys(p?.ddat_params||{}).join(', ') || '—' },
+  ];
+  document.getElementById('sum-preview').innerHTML = rows.map(r =>
+    `<div class="sr"><span class="sk">${r.k}</span><span class="sv">${r.v}</span></div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════
+// SUBMIT FLOW
+// ══════════════════════════════════════════════════
+async function submitRun() {
+  if (!connected || !jsonValid) return;
+  run = { requestId:genReqId(), commitSha:null, commitUrl:null, runId:null, runUrl:null, runNumber:null, artifactId:null, artifactName:null, submittedAt:new Date().toISOString(), elapsed:0, elapsedTimer:null };
+  STEPS.forEach(s => stepSt[s.id] = 'pending');
+  stepSt['json'] = 'done';
+  setState(S.SUBMITTING);
+  setStage('Mengirim file ke repository…', run.requestId);
+  renderTimeline(); renderMeta(); startElapsed();
+
+  const owner = v('owner'), repo = v('repo'), branch = v('branch');
+  const prog  = v('program').toLowerCase();
+  const path  = `data/canonical/canonical_${prog}_v1.json`;
+  const b64   = btoa(unescape(encodeURIComponent(document.getElementById('json-editor').value)));
+  const msg   = `ui-v1 submit | program=${prog} | requestId=${run.requestId}`;
+
+  try {
+    let sha = null;
+    const ex = await githubFetch(`/repos/${owner}/${repo}/contents/${path}?ref=${branch}`);
+    if (ex.ok) { const d = await ex.json(); sha = d.sha; }
+
+    const body = { message:msg, content:b64, branch };
+    if (sha) body.sha = sha;
+
+    const r = await githubFetch(`/repos/${owner}/${repo}/contents/${path}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+    });
+    if (!r.ok) { const err = await r.json(); throw new Error(`Commit gagal (${r.status}): ${err.message}`); }
+
+    const cd = await r.json();
+    run.commitSha = cd.commit?.sha;
+    run.commitUrl = cd.commit?.html_url;
+
+    stepSt['commit'] = 'done';
+    setState(S.DETECTING);
+    setStage('Menunggu workflow berjalan…', 'Mendeteksi run…');
+    renderTimeline(); renderMeta();
+    await pollForRun();
+  } catch(e) {
+    setState(S.ERROR);
+    setStage('Gagal', e.message);
+    stepSt['commit'] = 'failed';
+    renderTimeline(); stopElapsed();
+  }
+}
+
+async function pollForRun() {
+  const owner = v('owner'), repo = v('repo'), branch = v('branch');
+  pollCount = 0;
+  stepSt['detect'] = 'active'; renderTimeline();
+
+  const detect = async () => {
+    if (pollCount++ > 18) {
+      setState(S.ERROR);
+      setStage('Run tidak terdeteksi', 'Periksa tab GitHub Actions secara langsung');
+      stepSt['detect'] = 'failed'; renderTimeline(); stopElapsed(); return;
+    }
+    try {
+      const r = await githubFetch(`/repos/${owner}/${repo}/actions/runs?branch=${branch}&event=push&per_page=10`);
+      if (!r.ok) { pollingTimer = setTimeout(detect, 10000); return; }
+      const data = await r.json();
+      const runs = data.workflow_runs || [];
+
+      // Strict match by head_sha
+      const match = run.commitSha ? runs.find(r => r.head_sha === run.commitSha) : null;
+
+      if (match) {
+        run.runId = match.id; run.runUrl = match.html_url; run.runNumber = match.run_number;
+        stepSt['detect'] = 'done'; stepSt['running'] = 'active';
+        setState(S.RUNNING);
+        setStage('Workflow sedang berjalan', `Run #${match.run_number}`);
+        document.getElementById('btn-github').disabled = false;
+        document.getElementById('btn-refresh').disabled = false;
+        renderTimeline(); renderMeta();
+        await pollRunStatus();
+      } else if (!run.commitSha) {
+        setStage('SHA commit tidak tersedia', 'Tidak bisa mendeteksi run secara akurat');
+        stepSt['detect'] = 'failed'; renderTimeline(); stopElapsed();
+      } else {
+        setStage('Menunggu run terdeteksi…', `Percobaan ${pollCount}/18`);
+        pollingTimer = setTimeout(detect, 10000);
+      }
+    } catch(e) { pollingTimer = setTimeout(detect, 10000); }
+  };
+
+  pollingTimer = setTimeout(detect, 8000);
+}
+
+async function pollRunStatus() {
+  const owner = v('owner'), repo = v('repo');
+  const poll = async () => {
+    if (pollCount++ > MAX_POLLS) {
+      setState(S.ERROR); setStage('Timeout', 'Workflow melebihi 25 menit'); stopElapsed(); return;
+    }
+    try {
+      const r = await githubFetch(`/repos/${owner}/${repo}/actions/runs/${run.runId}`);
+      if (!r.ok) { pollingTimer = setTimeout(poll, 10000); return; }
+      const d = await r.json();
+      if (d.status === 'completed') {
+        stepSt['running'] = 'done';
+        if (d.conclusion === 'success') {
+          stepSt['done'] = 'done'; stepSt['artifact'] = 'active';
+          setState(S.SUCCESS);
+          setStage('Workflow selesai — mengambil artifact…', d.conclusion);
+          renderTimeline(); renderMeta();
+          await fetchArtifact();
+        } else {
+          stepSt['done'] = 'failed';
+          setState(S.FAILED);
+          setStage('Proses gagal', 'Buka detail GitHub untuk melihat sumber masalah');
+          renderTimeline(); renderMeta(); stopElapsed();
+        }
+      } else { pollingTimer = setTimeout(poll, 10000); }
+    } catch(e) { pollingTimer = setTimeout(poll, 10000); }
+  };
+  pollingTimer = setTimeout(poll, 10000);
+}
+
+async function fetchArtifact() {
+  const owner = v('owner'), repo = v('repo');
+  let retries = 0;
+  const tryF = async () => {
+    try {
+      const r = await githubFetch(`/repos/${owner}/${repo}/actions/runs/${run.runId}/artifacts`);
+      if (!r.ok) throw new Error(r.status);
+      const data  = await r.json();
+      const arts  = data.artifacts || [];
+      const art   = arts.find(a => a.name.toUpperCase().includes(v('program').toUpperCase())) || arts[0];
+      if (art) {
+        run.artifactId = art.id; run.artifactName = art.name;
+        stepSt['artifact'] = 'done';
+        setState(S.ARTIFACT);
+        setStage('Artifact siap', 'Hasil proses sudah tersedia untuk diunduh');
+        document.getElementById('btn-download').disabled = false;
+        renderTimeline(); renderMeta(); stopElapsed();
+      } else if (retries++ < 6) { pollingTimer = setTimeout(tryF, 15000); }
+      else {
+        stepSt['artifact'] = 'failed'; setState(S.ERROR);
+        setStage('Artifact tidak ditemukan', 'Run sukses tapi artifact belum tersedia');
+        renderTimeline(); stopElapsed();
+      }
+    } catch(e) { if (retries++ < 6) pollingTimer = setTimeout(tryF, 15000); }
+  };
+  await tryF();
+}
+
+async function downloadArtifact() {
+  if (!run.artifactId) return;
+  const owner = v('owner'), repo = v('repo');
+  const btn = document.getElementById('btn-download');
+  btn.disabled = true; btn.textContent = '↓ Mengunduh…';
+  try {
+    const r = await githubFetch(`/repos/${owner}/${repo}/actions/artifacts/${run.artifactId}/zip`);
+    if (!r.ok) throw new Error(r.status);
+    const blob = await r.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `${run.artifactName||'sroi-artifact'}.zip`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    stepSt['dl'] = 'done'; setState(S.DOWNLOADED);
+    setStage('Unduhan selesai', `${run.artifactName}.zip tersimpan`);
+    renderTimeline();
+  } catch(e) {
+    if (run.runUrl) window.open(run.runUrl, '_blank');
+  }
+  btn.disabled = false; btn.textContent = '↓ Unduh Artifact (.zip)';
+}
+
+async function refreshStatus() {
+  if (!run.runId) return;
+  const owner = v('owner'), repo = v('repo');
+  try {
+    const r = await githubFetch(`/repos/${owner}/${repo}/actions/runs/${run.runId}`);
+    const d = await r.json();
+    setStage(`Status: ${d.status}`, d.conclusion || 'sedang berjalan');
+  } catch(e){}
+}
+
+function openGitHub() {
+  window.open(run.runUrl || `https://github.com/${v('owner')}/${v('repo')}/actions`, '_blank');
+}
+
+// Reset hanya run state, koneksi dipertahankan
+function resetRunState() {
+  if (pollingTimer) clearTimeout(pollingTimer);
+  stopElapsed();
+  run = { requestId:null, commitSha:null, commitUrl:null, runId:null, runUrl:null, runNumber:null, artifactId:null, artifactName:null, submittedAt:null, elapsed:0, elapsedTimer:null };
+  pollCount = 0;
+  STEPS.forEach(s => stepSt[s.id] = 'pending');
+  setState(jsonValid ? S.JSON_VALID : S.IDLE);
+  setStage('Siap', 'Run sebelumnya direset. Koneksi dan konfigurasi tetap aktif.');
+  renderTimeline(); renderMeta();
+  ['btn-download','btn-refresh','btn-github'].forEach(id => document.getElementById(id).disabled = true);
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+function setStage(lbl, sub) {
+  sel('stage-lbl', lbl); sel('stage-sub', sub||'');
+}
+
+function renderTimeline() {
+  const ico = { pending:'', done:'✓', active:'→', failed:'✗' };
+  document.getElementById('timeline').innerHTML = STEPS.map(s => {
+    const st = stepSt[s.id] || 'pending';
+    return `<div class="tl-item ${st}"><span class="tl-dot"></span><span class="tl-icon">${ico[st]}</span><span>${s.label}</span></div>`;
+  }).join('');
+}
+
+function renderMeta() {
+  const rows = [
+    { k:'Request ID', v: run.requestId||'—' },
+    { k:'Commit SHA', v: shortSha(run.commitSha), hi:true },
+    { k:'Nomor Run',  v: run.runNumber ? `#${run.runNumber}` : '—', hi:true },
+    { k:'Artifact',   v: run.artifactName||'—' },
+    { k:'Elapsed',    v: run.elapsed ? fmtElapsed(run.elapsed) : '—' },
+  ];
+  document.getElementById('meta-table').innerHTML = rows.map(r =>
+    `<div class="meta-r"><span class="meta-k">${r.k}</span><span class="meta-v${r.hi?' hi':''}">${r.v}</span></div>`
+  ).join('');
+}
+
+function startElapsed() {
+  run.elapsed = 0;
+  if (run.elapsedTimer) clearInterval(run.elapsedTimer);
+  run.elapsedTimer = setInterval(() => {
+    run.elapsed++;
+    document.querySelectorAll('.meta-k').forEach(el => {
+      if (el.textContent === 'Elapsed') el.nextElementSibling.textContent = fmtElapsed(run.elapsed);
+    });
+  }, 1000);
+}
+function stopElapsed() { if (run.elapsedTimer) clearInterval(run.elapsedTimer); }
+
+// Meta toggle
+let metaOpen = false;
+function toggleMeta() {
+  metaOpen = !metaOpen;
+  document.getElementById('meta-body').className  = 'adv-body' + (metaOpen ? ' open' : '');
+  document.getElementById('meta-arrow').className = 'adv-arrow' + (metaOpen ? ' open' : '');
+}
+
+// Init
+renderTimeline(); renderMeta();
+</script>
+</body>
+</html>
