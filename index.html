@@ -6,6 +6,7 @@
 <title>SROI Report Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="canonical_validator.js"></script>
 <style>
 :root {
   --bg:          #f5f7fa;
@@ -826,59 +827,65 @@ const REQ_ARRAYS  = ['source_registry','investment','outcomes','monetization'];
 const MON_REQ     = ['aspect_code','year','gross_idr','display_status'];
 
 function validateAndPreview() {
-  const ed = document.getElementById('json-editor');
-  const items = []; let parsed;
+  const jsonStr  = document.getElementById('json-editor').value;
+  const progCode = v('program');
 
-  try {
-    parsed = JSON.parse(ed.value);
-    items.push({ t:'ok', m:'Sintaks JSON valid' });
-  } catch(e) {
-    items.push({ t:'err', m:`Kesalahan sintaks: ${e.message.split('\n')[0]}` });
-    renderVal(items); jsonValid = false; updateSubmitBtn(); return;
+  if (typeof CanonicalValidator !== 'undefined') {
+    const result = CanonicalValidator.validate(jsonStr, progCode, {
+      mode: 'submit', expectedYears: [2023, 2024, 2025], failOnCoverageBab7: true,
+    });
+    renderValResult(result);
+    renderPreviewFromSummary(result.summary);
+    jsonValid = result.can_submit;
+    updateSubmitBtn();
+    if (jsonValid) setState(S.JSON_VALID);
+  } else {
+    try {
+      JSON.parse(jsonStr);
+      jsonValid = true;
+      document.getElementById('val-result').innerHTML =
+        '<div class="vi ok"><span class="ic">✓</span><span>Sintaks JSON valid</span></div>';
+      updateSubmitBtn();
+    } catch(e) {
+      jsonValid = false;
+      document.getElementById('val-result').innerHTML =
+        '<div class="vi err"><span class="ic">✗</span><span>Kesalahan sintaks JSON</span></div>';
+      updateSubmitBtn();
+    }
+  }
+}
+
+function renderValResult(result) {
+  const allIssues = [...result.errors, ...result.warnings, ...result.infos];
+  const ico = { error:'✗', warning:'!', info:'i' };
+  const cls = { error:'err', warning:'warn', info:'dim' };
+  const s = result.summary;
+  let html = '';
+
+  if (result.status === 'pass') {
+    html = '<div class="vi ok"><span class="ic">✓</span><span>Semua validasi lolos — siap di-submit</span></div>';
+  } else {
+    html += s.structural.pass
+      ? '<div class="vi ok"><span class="ic">✓</span><span>Structural: OK</span></div>'
+      : `<div class="vi err"><span class="ic">✗</span><span>Structural: ${s.structural.error_count} error</span></div>`;
+    html += s.schema_contract.pass
+      ? '<div class="vi ok"><span class="ic">✓</span><span>Schema contract: OK</span></div>'
+      : `<div class="vi err"><span class="ic">✗</span><span>Schema contract: ${s.schema_contract.error_count} error</span></div>`;
+    if (s.data_quality.warning_count > 0)
+      html += `<div class="vi warn"><span class="ic">!</span><span>Data quality: ${s.data_quality.warning_count} peringatan</span></div>`;
   }
 
-  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-    items.push({ t:'err', m:'Root JSON harus berupa object {}' });
-    renderVal(items); jsonValid = false; updateSubmitBtn(); return;
-  }
-
-  const missing = REQ_FIELDS.filter(f => !(f in parsed));
-  if (missing.length === 0) items.push({ t:'ok', m:'Semua field wajib hadir' });
-  else missing.forEach(f => items.push({ t:'err', m:`Field wajib hilang: ${f}` }));
-
-  REQ_ARRAYS.forEach(f => {
-    if (!(f in parsed)) return;
-    if (!Array.isArray(parsed[f])) items.push({ t:'err', m:`${f} harus berupa array` });
-    else if (parsed[f].length === 0) items.push({ t:'warn', m:`${f}: array kosong` });
+  allIssues.slice(0, 8).forEach(issue => {
+    const c = cls[issue.severity] || 'dim';
+    const i = ico[issue.severity] || '·';
+    html += `<div class="vi ${c}" title="${(issue.why_it_matters||'').replace(/"/g,"'")}">
+      <span class="ic">${i}</span><span>${issue.message}${issue.action ? ' — ' + issue.action : ''}</span>
+    </div>`;
   });
+  if (allIssues.length > 8)
+    html += `<div class="vi dim"><span class="ic">·</span><span>...dan ${allIssues.length - 8} issue lainnya</span></div>`;
 
-  if (Array.isArray(parsed.monetization) && parsed.monetization.length > 0) {
-    const missMon = MON_REQ.filter(k => !(k in parsed.monetization[0]));
-    if (missMon.length > 0) items.push({ t:'warn', m:`monetization: kurang field ${missMon.join(', ')}` });
-    else items.push({ t:'ok', m:'Format monetization valid' });
-  }
-
-  if (parsed.strategy_design?.institutional && typeof parsed.strategy_design.institutional === 'string') {
-    items.push({ t:'warn', m:'strategy_design.institutional harus object {nodes, note}, bukan string' });
-  }
-
-  if (parsed.ddat_params) {
-    const noJust = Object.keys(parsed.ddat_params).filter(k => !parsed.ddat_params[k].justification);
-    if (noJust.length > 0) items.push({ t:'warn', m:`ddat_params: justification belum ada di ${noJust.join(', ')}` });
-  }
-
-  if (parsed.program_identity?.program_code) {
-    const code = parsed.program_identity.program_code;
-    const sel  = v('program');
-    if (code !== sel) items.push({ t:'warn', m:`program_code '${code}' ≠ pilihan '${sel}'` });
-    else items.push({ t:'ok', m:`program_code cocok: ${code}` });
-  }
-
-  jsonValid = missing.length === 0;
-  renderVal(items);
-  renderPreview(parsed);
-  updateSubmitBtn();
-  if (jsonValid) setState(S.JSON_VALID);
+  document.getElementById('val-result').innerHTML = html;
 }
 
 function renderVal(items) {
@@ -888,21 +895,34 @@ function renderVal(items) {
   ).join('');
 }
 
-function renderPreview(p) {
-  const pi  = p?.program_identity || {};
-  const inv = Array.isArray(p?.investment) ? p.investment : [];
-  const tot = inv.reduce((a,b) => a + (b.amount_idr||0), 0);
+function renderPreviewFromSummary(summary) {
+  if (!summary) { document.getElementById('sum-preview').innerHTML = '<div style="color:var(--text3)">—</div>'; return; }
+  const c = summary.counts, t = summary.totals, pr = summary.program;
   const rows = [
-    { k:'Program',    v: pi.program_name || pi.program_code || '—' },
-    { k:'Perusahaan', v: pi.company || '—' },
-    { k:'Periode',    v: pi.period_label || (pi.period_start ? `${pi.period_start}–${pi.period_end}` : '—') },
-    { k:'Stakeholder',v: (p?.stakeholders?.length||0) + ' pihak' },
-    { k:'Investasi',  v: tot > 0 ? 'Rp '+tot.toLocaleString('id-ID') : inv.length+' entri' },
-    { k:'Outcome',    v: (p?.outcomes?.length||0) + ' outcome' },
-    { k:'Monetisasi', v: (p?.monetization?.length||0) + ' entri' },
-    { k:'Aspek DDAT', v: Object.keys(p?.ddat_params||{}).join(', ') || '—' },
+    { k:'Program',    v: pr.program_name || pr.detected_code || '—' },
+    { k:'Kode',       v: pr.detected_code || '—' },
+    { k:'Stakeholder',v: (c.stakeholders !== null ? c.stakeholders : '—') + ' pihak' },
+    { k:'Investasi',  v: t.total_investment_idr > 0 ? 'Rp '+t.total_investment_idr.toLocaleString('id-ID') : c.investment+' entri' },
+    { k:'Outcome',    v: c.outcomes + ' outcome' },
+    { k:'Monetisasi', v: c.monetization + ' entri' },
+    { k:'Gross total',v: t.total_gross_idr > 0 ? 'Rp '+t.total_gross_idr.toLocaleString('id-ID') : '—' },
+    { k:'Tahun data', v: summary.years.investment.join(', ') || '—' },
   ];
   document.getElementById('sum-preview').innerHTML = rows.map(r =>
+    `<div class="sr"><span class="sk">${r.k}</span><span class="sv">${r.v}</span></div>`
+  ).join('');
+}
+
+function renderPreview(p) {
+  const pi = p?.program_identity||{}, inv = Array.isArray(p?.investment)?p.investment:[];
+  const tot = inv.reduce((a,b)=>a+(b.amount_idr||0),0);
+  const rows = [
+    { k:'Program',   v: pi.program_name||pi.program_code||'—' },
+    { k:'Investasi', v: tot>0?'Rp '+tot.toLocaleString('id-ID'):inv.length+' entri' },
+    { k:'Outcome',   v: (p?.outcomes?.length||0)+' outcome' },
+    { k:'Monetisasi',v: (p?.monetization?.length||0)+' entri' },
+  ];
+  document.getElementById('sum-preview').innerHTML = rows.map(r=>
     `<div class="sr"><span class="sk">${r.k}</span><span class="sv">${r.v}</span></div>`
   ).join('');
 }
@@ -1003,13 +1023,32 @@ async function pollForRun() {
 
       if (match) {
         run.runId = match.id; run.runUrl = match.html_url; run.runNumber = match.run_number;
-        stepSt['detect'] = 'done'; stepSt['running'] = 'active';
-        setState(S.RUNNING);
-        setStage('Workflow sedang berjalan', `Run #${match.run_number}`);
+        stepSt['detect'] = 'done';
         document.getElementById('btn-github').disabled = false;
         document.getElementById('btn-refresh').disabled = false;
-        renderTimeline(); renderMeta();
-        await pollRunStatus();
+
+        // Jika run sudah completed saat terdeteksi, langsung proses tanpa polling lagi
+        if (match.status === 'completed') {
+          stepSt['running'] = 'done';
+          if (match.conclusion === 'success') {
+            stepSt['done'] = 'done'; stepSt['artifact'] = 'active';
+            setState(S.RUN_SUCCESS);
+            setStage('Workflow selesai — mengambil artifact…', match.conclusion);
+            renderTimeline(); renderMeta();
+            await fetchArtifact();
+          } else {
+            stepSt['done'] = 'failed';
+            setState(S.RUN_FAILED);
+            setStage('Proses gagal', `conclusion: ${match.conclusion}`);
+            renderTimeline(); renderMeta(); stopElapsed();
+          }
+        } else {
+          stepSt['running'] = 'active';
+          setState(S.RUNNING);
+          setStage('Workflow sedang berjalan', `Run #${match.run_number}`);
+          renderTimeline(); renderMeta();
+          await pollRunStatus();
+        }
       } else if (!run.commitSha) {
         setStage('SHA commit tidak tersedia', 'Tidak bisa mendeteksi run secara akurat');
         stepSt['detect'] = 'failed'; renderTimeline(); stopElapsed();
