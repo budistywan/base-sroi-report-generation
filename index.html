@@ -1010,7 +1010,7 @@ async function pollForRun() {
     } catch(e) { pollingTimer = setTimeout(detect, 10000); }
   };
 
-  pollingTimer = setTimeout(detect, 8000);
+  pollingTimer = setTimeout(detect, 20000); // tunggu 20 detik agar GitHub mendaftarkan run
 }
 
 async function pollRunStatus() {
