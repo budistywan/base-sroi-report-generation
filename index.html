@@ -573,25 +573,26 @@ header {
   </div>
   <div class="panel-body">
 
-    <!-- 1. Kartu status utama — selalu terlihat -->
+    <!-- 1. Kartu status utama -->
     <div class="stage-card" id="stage-card">
       <div class="stage-lbl" id="stage-lbl">Siap</div>
       <div class="stage-sub" id="stage-sub">Lengkapi konfigurasi dan submit untuk memulai</div>
-</div>
-  <div class="err-box" id="err-box">
-    <div class="err-box-title">Detail Error</div>
-    <div class="err-box-body" id="err-body">—</div>
-    <button class="err-box-copy" onclick="copyError()">📋 Copy Error</button>
-  </div>
     </div>
 
-    <!-- 2. Progres — selalu terlihat -->
+    <!-- Error detail — muncul saat pipeline gagal -->
+    <div class="err-box" id="err-box">
+      <div class="err-box-title">Detail Error</div>
+      <div class="err-box-body" id="err-body">—</div>
+      <button class="err-box-copy" onclick="copyError()">📋 Copy Error</button>
+    </div>
+
+    <!-- 2. Progres -->
     <div class="sec-label" style="margin-bottom:10px">Progres</div>
     <div class="tl" id="timeline"></div>
 
     <div class="divider"></div>
 
-    <!-- 3. Tombol aksi — selalu terlihat -->
+    <!-- 3. Tombol aksi -->
     <div class="act-grp">
       <button class="btn" onclick="refreshStatus()" id="btn-refresh" disabled>↻ Perbarui Status</button>
       <button class="btn success" onclick="downloadArtifact()" id="btn-download" disabled>↓ Unduh Artifact (.zip)</button>
@@ -601,7 +602,7 @@ header {
 
     <div class="divider"></div>
 
-    <!-- 4. Metadata teknis — collapsible -->
+    <!-- 4. Metadata teknis -->
     <button class="adv-btn" onclick="toggleMeta()" id="meta-toggle-btn">
       <span>Detail Teknis Run</span>
       <span class="adv-arrow" id="meta-arrow">▾</span>
@@ -1253,10 +1254,21 @@ async function fetchErrorLog(runId) {
     const failedJob = jd.jobs?.find(j => j.conclusion === 'failure');
     if (!failedJob) return;
 
-    // Ambil full log dari job yang gagal
-    const lr = await githubFetch(`/repos/${owner}/${repo}/actions/jobs/${failedJob.id}/logs`);
-    if (!lr.ok) return;
+    // Log endpoint mengembalikan redirect — gunakan fetch biasa dengan PAT
+    const logUrl = `https://api.github.com/repos/${owner}/${repo}/actions/jobs/${failedJob.id}/logs`;
+    const lr = await fetch(logUrl, {
+      headers: {
+        'Authorization': 'Bearer ' + getPAT(),
+        'Accept': 'application/vnd.github+json',
+      },
+      redirect: 'follow',
+    });
+    if (!lr.ok) {
+      console.log('Log fetch failed:', lr.status);
+      return;
+    }
     const logText = await lr.text();
+    console.log('Log fetched, length:', logText.length);
 
     // Simpan full log untuk tombol copy
     _fullErrorLog = logText;
