@@ -46,9 +46,9 @@ const PROGRAM_NAMES = {
   EHS: 'Enduro Home Service',
   ESL: 'Enduro Sahabat Lapas',
   ESD: 'Enduro Sahabat Difabel',
-  ESP: 'Enduro Sahabat Petani',
-  ESS: 'Enduro Sahabat Sekolah',
-  ETB: 'Enduro Teman Bengkel',
+  ESP: 'Enduro Student Program',
+  ESS: 'Enduro Sahabat Santri',
+  ETB: 'Enduro Tapal Batas',
   PSN: 'Pertamina Sahabat Nelayan',
 };
 
