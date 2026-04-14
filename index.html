@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SROI Report Generator</title>
+<title>Generator Skeleton Laporan SROI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="canonical_validator.js"></script>
@@ -409,11 +409,11 @@ header {
 <header>
   <div class="h-left">
     <div class="h-logo">S</div>
-    <span class="h-title">SROI Report Generator</span>
+    <span class="h-title">Generator Skeleton Laporan SROI</span>
     <span class="h-sub">by Manara Advisory</span>
   </div>
   <div class="h-right">
-    <span class="badge" id="hdr-conn"><span class="bdot" id="hdr-dot"></span><span id="hdr-lbl">Tidak Terhubung</span></span>
+    <span class="badge" id="hdr-conn"><span class="bdot" id="hdr-dot"></span><span id="hdr-lbl">Tidak terhubung ke server pipeline</span></span>
     <span class="badge blue" id="hdr-session" style="display:none"><span class="bdot"></span>Sesi Aktif</span>
   </div>
 </header>
@@ -426,40 +426,49 @@ header {
 <div class="panel">
   <div class="panel-hd">
     <div class="panel-title">Workspace</div>
-    <div class="panel-sub">Pilih program dan siapkan file JSON sebelum submit</div>
+    <div class="panel-sub">Unggah file dan verifikasi sebelum submit</div>
   </div>
   <div class="panel-body">
 
-    <!-- Blok 1: Program Aktif -->
-    <div class="prog-card">
+    <!-- Blok 1: Upload + Program Aktif (evolved card) -->
+    <!-- State 1: belum ada file -->
+    <div class="prog-card" id="upload-card" style="cursor:pointer; border-style:dashed;" onclick="document.getElementById('file-input').click()">
+      <div class="prog-lbl" style="color:var(--text3)">Unggah File Substansi (.JSON)</div>
+      <div class="prog-name" style="font-size:13px; font-weight:500; color:var(--text3); margin-top:4px;">Belum ada file substansi/canonical yang dimuat</div>
+      <div style="margin-top:10px;">
+        <button class="btn sm" style="pointer-events:none;">↑ Buka File JSON</button>
+      </div>
+      <input type="file" id="file-input" accept=".json" onchange="loadFile(event)" style="display:none">
+    </div>
+
+    <!-- State 2: file sudah dimuat — disembunyikan sampai ada file -->
+    <div class="prog-card" id="prog-card" style="display:none;">
       <div class="prog-lbl">Program Aktif</div>
-      <div class="prog-name" id="prog-name">Enduro Home Service</div>
-      <div class="prog-code" id="prog-code">EHS · 2023–2025</div>
-      <div class="prog-select-wrap">
-        <label>Pilih Program</label>
-        <select id="program" onchange="onProgramChange()">
-          <option value="EHS">EHS — Enduro Home Service</option>
-          <option value="ESL">ESL — Enduro Sahabat Lapas</option>
-          <option value="ESD">ESD — Enduro Sahabat Difabel</option>
-          <option value="ESP">ESP — Enduro Student Program</option>
-          <option value="ESS">ESS — Enduro Sahabat Santri</option>
-          <option value="ETB">ETB — Enduro Tapal Batas</option>
-          <option value="PSN">PSN — Pertamina Sahabat Nelayan</option>
-        </select>
+      <div class="prog-name" id="prog-name">—</div>
+      <div class="prog-code" id="prog-code">—</div>
+      <div style="margin-top:10px; display:flex; gap:6px; align-items:center;">
+        <button class="btn sm" onclick="document.getElementById('file-input-2').click()">↑ Ganti File</button>
+        <input type="file" id="file-input-2" accept=".json" onchange="loadFile(event)" style="display:none">
       </div>
     </div>
 
+    <!-- Hidden select untuk kompatibilitas JS yang membaca v('program') -->
+    <select id="program" onchange="onProgramChange()" style="display:none">
+      <option value="EHS">EHS — Enduro Home Service</option>
+      <option value="ESL">ESL — Enduro Sahabat Lapas</option>
+      <option value="ESD">ESD — Enduro Sahabat Difabel</option>
+      <option value="ESP">ESP — Enduro Student Program</option>
+      <option value="ESS">ESS — Enduro Sahabat Santri</option>
+      <option value="ETB">ETB — Enduro Tapal Batas</option>
+      <option value="PSN">PSN — Pertamina Sahabat Nelayan</option>
+    </select>
+
     <!-- Blok 2: Status Koneksi -->
     <div style="padding: 10px 0; border-top: 1px solid var(--border);">
-      <span class="badge" id="lft-conn"><span class="bdot" id="lft-dot"></span><span id="lft-lbl">Tidak Terhubung</span></span>
+      <span class="badge" id="lft-conn"><span class="bdot" id="lft-dot"></span><span id="lft-lbl">Tidak terhubung ke server pipeline</span></span>
     </div>
 
-    <!-- Blok 3: Sebelum Submit -->
-    <div class="guidance">
-      <div class="g-title">Sebelum Submit</div>
-      <div class="g-item">Pastikan file JSON sudah final</div>
-      <div class="g-item">Submit akan memperbarui data aktif untuk program yang dipilih</div>
-    </div>
+
 
     <!-- Blok 4: Pengaturan Lanjutan -->
     <button class="adv-btn" onclick="toggleAdv()" id="adv-btn">
@@ -536,8 +545,6 @@ header {
 ══════════════════════════════════════════════ -->
 <div class="panel center-panel">
   <div class="editor-toolbar">
-    <button class="btn sm" onclick="document.getElementById('file-input').click()">↑ Buka File</button>
-    <input type="file" id="file-input" accept=".json" onchange="loadFile(event)">
     <button class="btn sm" onclick="formatJSON()">{ } Format</button>
     <button class="btn sm" onclick="validateAndPreview()">✓ Validasi</button>
     <div class="t-spacer"></div>
@@ -546,7 +553,7 @@ header {
 
   <div class="editor-area">
     <textarea id="json-editor"
-      placeholder="Paste canonical JSON di sini, atau klik Buka File untuk memilih file .json"
+      placeholder="File substansi/canonical akan muncul di sini setelah diunggah. Anda juga bisa paste JSON langsung."
       oninput="onEditorInput()"></textarea>
   </div>
 
@@ -869,7 +876,7 @@ async function testConnection() {
 function updateConnBadge(ok) {
   const cls = ok ? ' green' : '';
   const dot = ok ? ' pulse' : '';
-  const lbl = ok ? 'Terhubung' : 'Tidak Terhubung';
+  const lbl = ok ? 'Terhubung ke server pipeline' : 'Tidak terhubung ke server pipeline';
   ['hdr-conn','lft-conn'].forEach(id => {
     const b = document.getElementById(id);
     if (b) b.className = 'badge' + cls;
@@ -931,7 +938,7 @@ function loadFile(e) {
   r.onload = ev => {
     document.getElementById('json-editor').value = ev.target.result;
     formatJSON();
-    // Auto-sync dropdown dari program_code di JSON
+    // Auto-detect program_code dari JSON → sync hidden select → tampilkan prog-card
     try {
       const parsed = JSON.parse(ev.target.result);
       const code = parsed?.program_identity?.program_code?.toUpperCase();
@@ -943,6 +950,9 @@ function loadFile(e) {
         }
       }
     } catch(e) {}
+    // Tampilkan prog-card, sembunyikan upload-card
+    document.getElementById('upload-card').style.display = 'none';
+    document.getElementById('prog-card').style.display = '';
     validateAndPreview();
   };
   r.readAsText(file);
