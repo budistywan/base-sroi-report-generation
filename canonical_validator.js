@@ -554,6 +554,21 @@ class CanonicalValidator {
       });
     }
 
+    // E118 — uncertainty_flags harus array of objects, bukan array of strings
+    if (Array.isArray(p.uncertainty_flags) && p.uncertainty_flags.length > 0) {
+      const strItems = p.uncertainty_flags.filter(f => typeof f === 'string');
+      if (strItems.length > 0) {
+        this._push(bag, 'error', {
+          code: 'E118', layer: 2, category: 'schema_contract',
+          field: 'uncertainty_flags', path_type: 'group',
+          message: `uncertainty_flags berisi ${strItems.length} string — harus berupa array of objects.`,
+          why_it_matters: 'Pipeline memanggil .get("severity") pada setiap entri — string akan crash dengan AttributeError.',
+          action: 'Ubah setiap string menjadi object: { "description": "...", "severity": "medium", "field": "..." }',
+          example_fix: { description: strItems[0], severity: 'medium', field: 'general' },
+        });
+      }
+    }
+
     // E115 — Required non-empty strings
     const nonEmptyChecks = [
       ['program_identity.program_code', p.program_identity?.program_code],
